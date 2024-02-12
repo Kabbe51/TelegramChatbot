@@ -33,7 +33,6 @@ def handle_response(text: str) -> str:
 
     return "I don't understand your command. Please try again."
 
-
 # message handler
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_type: str = update.message.chat.type
@@ -53,7 +52,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print('Bot:', response)
     await update.message.reply_text(response)
 
-
 # basic error handler
 async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f'Update {update} caused an error {context.error}')
@@ -61,9 +59,9 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 1:
-        await update.message.reply_text("Provide a CPE: ")
+        await update.message.reply_text("Try writing /cve and name of the cpe you want to check, and you will get the cves.")
         return
-    cpe_name = context.args[0]
+    cpe_name = "".join(context.args)
     r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10)
     for eachCVE in r:
         await update.message.reply_text(f"CVE ID: {eachCVE.id}\nCPE Name: {cpe_name}")
