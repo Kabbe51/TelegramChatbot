@@ -44,6 +44,11 @@ def handle_response(text: str) -> str:
 
     return "I don't understand your command. Please try again."
 
+    if "how" in processed:
+        return "Please write a command."
+
+    return "I don't understand your command. Please try again."
+
 # message handler
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_type: str = update.message.chat.type
