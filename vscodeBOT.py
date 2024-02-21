@@ -29,8 +29,11 @@ cursor.execute("SHOW TABLES LIKE 'user_requests'")
 if not cursor.fetchone():
     cursor.execute("""
         CREATE TABLE user_requests (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            user_id BIGINT NOT NULL,
+            user_id INT NOT NULL,
+            cve_id INT NOT NULL,
+            cpe_id INT NOT NULL,
+            CVE_CPE INT NOT NULL,
+            CVSS_scores INT NOT NULL,
             timestamp INT NOT NULL
         )
     """)
@@ -54,11 +57,6 @@ def handle_response(text: str) -> str:
 
     if "how are you in?" in processed:
         return "I am bot."
-
-    if "how" in processed:
-        return "Please write a command."
-
-    return "I don't understand your command. Please try again."
 
     if "how" in processed:
         return "Please write a command."
