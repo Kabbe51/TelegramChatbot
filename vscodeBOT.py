@@ -4,11 +4,22 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from telegram import Update
 import nvdlib
 from typing import Final
-import json
+import myDatabase
+import mysql.connector
+
 
 TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
 BOT_USERNAME: Final = "@botKabbeTbot"
 key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
+
+
+dbConfig = {
+    "host": "sql11.freemysqlhosting.net",
+    "user": "sql11685092",
+    "password": "zPDCFSq79C",
+    "datbase": "sql11685092"
+}
+
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome to telegram bot.")
