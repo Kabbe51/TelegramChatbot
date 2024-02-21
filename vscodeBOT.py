@@ -20,6 +20,22 @@ dbConfig = {
     "datbase": "sql11685092"
 }
 
+#establish connection
+connection = mysql.connector.connect(**dbConfig)
+
+cursor = connection.cursor()
+
+cursor.execute("SHOW TABLES LIKE 'user_requests'")
+if not cursor.fetchone():
+    cursor.execute("""
+        CREATE TABLE user_requests (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id BIGINT NOT NULL,
+            timestamp INT NOT NULL
+        )
+    """)
+    connection.commit()
+                   
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome to telegram bot.")
