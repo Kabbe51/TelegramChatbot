@@ -67,11 +67,11 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cpe_name = "".join(context.args)
 
     r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10)
+    new_msg = ""
     for eachCVE in r:
-            dbcursor.execute("INSERT INTO cvecpe (cve_id, cpe_name) VALUES (%s, %s)", (eachCVE.id, cpe_name))
-            await update.message.reply_text(f"CVE ID: {eachCVE.id}\nCPE Name: {cpe_name}")
-
-    #connection.commit()
+        catch = f'{eachCVE.id}\n'
+        new_msg += catch
+    await update.message.reply_text(f"CVE ID:\n{new_msg}\nCPE Name: {cpe_name}")
 
 if __name__ == '__main__':
     #establish connection
