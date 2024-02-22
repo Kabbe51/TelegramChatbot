@@ -12,32 +12,6 @@ TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
 BOT_USERNAME: Final = "@botKabbeTbot"
 key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
 
-
-dbConfig = {
-    "host": "sql11.freemysqlhosting.net",
-    "user": "sql11685092",
-    "password": "zPDCFSq79C",
-    "datbase": "sql11685092"
-}
-
-#establish connection
-connection = mysql.connector.connect(**dbConfig)
-
-cursor = connection.cursor()
-
-cursor.execute("SHOW TABLES LIKE 'user_requests'")
-if not cursor.fetchone():
-    cursor.execute("""
-        CREATE TABLE user_requests (
-            user_id INT NOT NULL,
-            cve_id INT NOT NULL,
-            cpe_id INT NOT NULL,
-            CVE_CPE INT NOT NULL,
-            CVSS_scores INT NOT NULL,
-            timestamp INT NOT NULL
-        )
-    """)
-    connection.commit()
                    
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -96,7 +70,34 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for eachCVE in r:
         await update.message.reply_text(f"CVE ID: {eachCVE.id}\nCPE Name: {cpe_name}")
 
+    connection.commit()
+
 if __name__ == '__main__':
+    #establish connection
+    connection = mysql.connector.connect(
+        host = "sql11.freemysqlhosting.net",
+        user = "sql11685092",
+        password = "zPDCFSq79C",
+        database = "sql11685092"
+    )
+
+
+
+cursor = connection.cursor()
+
+cursor.execute("SHOW TABLES LIKE 'user_requests'")
+if not cursor:
+    cursor.execute("""
+        CREATE TABLE user_requests (
+            user_id NAME NOT NULL,
+            cve_id NAME NOT NULL,
+            cpe_id NAME NOT NULL,
+            CVE_CPE STRING NOT NULL,
+            CVSS_scores STRING NOT NULL,
+            timestamp INT NOT NULL
+        )
+    """)
+
     print("Bot is starting...")
     my_app = Application.builder().token(TOKEN).build()
 
