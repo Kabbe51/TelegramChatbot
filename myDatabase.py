@@ -1,3 +1,4 @@
+import nvdlib
 """import configparser
 from telethon import TelegramClient, events 
 from datetime import datetime

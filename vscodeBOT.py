@@ -4,7 +4,6 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from telegram import Update
 import nvdlib
 from typing import Final
-import myDatabase
 import mysql.connector
 
 
@@ -63,14 +62,16 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 1:
-        await update.message.reply_text("Try writing /cve and name of the cpe you want to check, and you will get the cves.")
+        await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
         return
     cpe_name = "".join(context.args)
+
     r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10)
     for eachCVE in r:
-        await update.message.reply_text(f"CVE ID: {eachCVE.id}\nCPE Name: {cpe_name}")
+            dbcursor.execute("INSERT INTO cvecpe (cve_id, cpe_name) VALUES (%s, %s)", (eachCVE.id, cpe_name))
+            await update.message.reply_text(f"CVE ID: {eachCVE.id}\nCPE Name: {cpe_name}")
 
-    connection.commit()
+    #connection.commit()
 
 if __name__ == '__main__':
     #establish connection
@@ -81,29 +82,21 @@ if __name__ == '__main__':
         database = "sql11685092"
     )
 
+    dbcursor = connection.cursor()
 
-
-cursor = connection.cursor()
-
-cursor.execute("SHOW TABLES LIKE 'user_requests'")
-if not cursor:
-    cursor.execute("""
-        CREATE TABLE user_requests (
-            user_id NAME NOT NULL,
-            cve_id NAME NOT NULL,
-            cpe_id NAME NOT NULL,
-            CVE_CPE STRING NOT NULL,
-            CVSS_scores STRING NOT NULL,
-            timestamp INT NOT NULL
-        )
-    """)
+    dbcursor.execute('''
+    CREATE TABLE IF NOT EXISTS cvecpe (
+        id INTEGER PRIMARY KEY NOT NULL,
+        cve_id VARCHAR(255) NOT NULL,
+        CPE_name VARCHAR(255) NOT NULL
+        )''')
 
     print("Bot is starting...")
     my_app = Application.builder().token(TOKEN).build()
 
     my_app.add_handler(CommandHandler('start', start_command))
     my_app.add_handler(CommandHandler('help', help_command))
-    my_app.add_handler(CommandHandler('cve', req_cve))
+    my_app.add_handler(CommandHandler('cvecpe', req_cve))
     # msg handler
     my_app.add_handler(MessageHandler(filters.TEXT, handle_message))
 
