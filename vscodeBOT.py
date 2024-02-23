@@ -71,6 +71,10 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for eachCVE in r:
         catch = f'{eachCVE.id}\n'
         new_msg += catch
+
+        dbcursor.execute("INSERT INTO cvecpe (cve_id, CPE_name) VALUES (%s, %s)", (eachCVE.id, cpe_name))
+        connection.commit()
+
     await update.message.reply_text(f"CVE ID:\n{new_msg}\nCPE Name: {cpe_name}")
 
 if __name__ == '__main__':
@@ -86,10 +90,11 @@ if __name__ == '__main__':
 
     dbcursor.execute('''
     CREATE TABLE IF NOT EXISTS cvecpe (
-        id INTEGER PRIMARY KEY NOT NULL,
+        id INTEGER PRIMARY KEY BOT NULL,
         cve_id VARCHAR(255) NOT NULL,
         CPE_name VARCHAR(255) NOT NULL
         )''')
+    
 
     print("Bot is starting...")
     my_app = Application.builder().token(TOKEN).build()
