@@ -1,5 +1,3 @@
-import datetime
-import requests
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from telegram import Update
 import nvdlib
@@ -65,15 +63,24 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
         return
     cpe_name = "".join(context.args)
-
-    r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10)
+    
+    dbcursor.execute("SELECT my_cves FROM cvecpe WHERE id = %s", (cpe_name,))
+    result = dbcursor.fetchone()
+    if result:
+        await update.message.reply_text(f"Result {result}\n")
+        return
+    r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10, delay=0.7, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     new_msg = ""
     for eachCVE in r:
         catch = f'{eachCVE.id}\n'
         new_msg += catch
 
-        dbcursor.execute("INSERT INTO cvecpe (cve_id, CPE_name) VALUES (%s, %s)", (eachCVE.id, cpe_name))
-        connection.commit()
+    
+
+
+    #dbcursor.execute("INSERT INTO cvecpe (id, my_cves) VALUES (%s, %s)", (cpe_name, new_msg))
+    #connection.commit()
+
 
     await update.message.reply_text(f"CVE ID:\n{new_msg}\nCPE Name: {cpe_name}")
 
@@ -81,20 +88,21 @@ if __name__ == '__main__':
     #establish connection
     connection = mysql.connector.connect(
         host = "sql11.freemysqlhosting.net",
-        user = "sql11685092",
-        password = "zPDCFSq79C",
-        database = "sql11685092"
+        user = "sql11688743",
+        password = "VtiuLP6LQA",
+        database = "sql11688743"
     )
 
     dbcursor = connection.cursor()
 
     dbcursor.execute('''
     CREATE TABLE IF NOT EXISTS cvecpe (
-        id INTEGER PRIMARY KEY BOT NULL,
-        cve_id VARCHAR(255) NOT NULL,
-        CPE_name VARCHAR(255) NOT NULL
+        id VARCHAR(255) NOT NULL,  
+        my_cves TEXT NOT NULL,
+        PRIMARY KEY (id)
         )''')
-    
+    #row1 cpe name
+    #id = cpe_name, cve = new_msg
 
     print("Bot is starting...")
     my_app = Application.builder().token(TOKEN).build()
