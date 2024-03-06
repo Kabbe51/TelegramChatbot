@@ -4,6 +4,8 @@ import nvdlib
 from typing import Final
 import mysql.connector
 from fpdf import FPDF
+import asyncio
+
 
 
 TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
@@ -13,9 +15,11 @@ key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome to telegram bot.")
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await asyncio.sleep(10)
     await update.message.reply_text("Hi, write an existing command to get started. For example /CVE, or /CPE")
 
 async def req(update: Update, context: ContextTypes.DEFAULT_TYPE): 
+    await asyncio.sleep(10)
     await update.message.reply_text("response")
 
 # response handler
@@ -56,6 +60,7 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 1:
         await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
+        await asyncio.sleep(10)
         return
     cpe_name = "".join(context.args)
     
@@ -65,6 +70,7 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         new_msg = result[0].strip().split("\n")
         new_format = "\n".join(new_msg)
         db_msg = "Retrieved from SQL database."
+        await asyncio.sleep(10)
         await update.message.reply_text(f"CVE ID:\n{new_format}\nCPE Name: {cpe_name}\n{db_msg}")
         return
     r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
@@ -75,7 +81,7 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     dbcursor.execute("INSERT INTO cvecpe (id, my_cves) VALUES (%s, %s)", (cpe_name, new_msg))
     connection.commit()
-
+    await asyncio.sleep(2)
     await update.message.reply_text(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
 
 #selects and returns everything stored in the database.
@@ -86,8 +92,10 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
         responder = ""
         for history in result:
             responder += f"CPE Name: {history[0]}nCVEs\n{history[1]}\n"
+        await asyncio.sleep(2)
         await update.message.reply_text(responder)
         return
+    await asyncio.sleep(2)
     await update.message.reply_text("No history recorded in database.")
 
 """async def pdf_download(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -114,9 +122,10 @@ async def my_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pdf.cell(0, 10, "---------------------------")
             pdf.ln()
         pdf.output('DB.pdf')
-
+        await asyncio.sleep(2)
         await context.bot.sendDocument(update.effective_chat.id, document=open("DB.pdf", 'rb'))
         return
+    await asyncio.sleep(2)
     await update.message.reply_text("Database is empty. ^v^")
 
 if __name__ == '__main__':
