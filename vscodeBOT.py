@@ -3,13 +3,12 @@ from telegram import Update
 import nvdlib
 from typing import Final
 import mysql.connector
+from fpdf import FPDF
 
 
 TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
 BOT_USERNAME: Final = "@botKabbeTbot"
 key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
-
-                   
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome to telegram bot.")
@@ -30,7 +29,6 @@ def handle_response(text: str) -> str:
         return "Please write a command."
 
     return "I don't understand your command. Please try again."
-
 # message handler
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_type: str = update.message.chat.type
@@ -80,6 +78,7 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
 
+#selects and returns everything stored in the database.
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dbcursor.execute("SELECT * FROM cvecpe")
     result = dbcursor.fetchall()
@@ -91,6 +90,34 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     await update.message.reply_text("No history recorded in database.")
 
+"""async def pdf_download(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    update.message.reply_text("Downloadiing PDF...") First try for PDF 
+    context.bot.sendDocument(update.effective_chat.id, document=open("bla.pdf", 'rb'))
+"""
+async def my_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    dbcursor.execute("SELECT * FROM cvecpe")
+    result = dbcursor.fetchall()
+    
+    pdf = FPDF('P', 'mm', 'Letter')
+    pdf.add_page()
+    pdf.set_font('helvetica', '', 16)
+    
+
+    if result:
+        for recorded in result:
+            pdf.cell(0, 10, f"CPE Name: {recorded[0]}")
+            pdf.ln()
+            cves = recorded[1].split('\n')
+            for cve in cves:
+                pdf.cell(0, 10, f"{cve}")           
+                pdf.ln()
+            pdf.cell(0, 10, "---------------------------")
+            pdf.ln()
+        pdf.output('DB.pdf')
+
+        await context.bot.sendDocument(update.effective_chat.id, document=open("DB.pdf", 'rb'))
+        return
+    await update.message.reply_text("Database is empty. ^v^")
 
 if __name__ == '__main__':
     #establish connection
@@ -109,8 +136,6 @@ if __name__ == '__main__':
         my_cves TEXT NOT NULL,
         PRIMARY KEY (id)
         )''')
-    #row1 cpe name
-    #id = cpe_name, cve = new_msg
 
     print("Bot is starting...")
     my_app = Application.builder().token(TOKEN).build()
@@ -119,10 +144,8 @@ if __name__ == '__main__':
     my_app.add_handler(CommandHandler('help', help_command))
     my_app.add_handler(CommandHandler('cvecpe', req_cve))
     my_app.add_handler(CommandHandler('history', history))
-    # msg handler
+    my_app.add_handler(CommandHandler('pdf', my_pdf))
     my_app.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-    # error handler
     my_app.add_error_handler(error)
 
     print("Polling...")
