@@ -1,4 +1,3 @@
-import unittest
 from unittest.mock import patch, MagicMock
 from telegram import Update, Message, Chat
 from vscodeBOT import start_command, help_command, req, handle_response, handle_message, error, req_cve
@@ -19,6 +18,18 @@ def test_handle_response(mock_msg):
     handle_response(new_update, None)
     mock_msg.reply_text.assert_called()
 
+@patch('Telegram.Update')
+def test_error(mock_msg):
+    error(new_update, None)
+    mock_msg.reply_text.assert_called()
+
+
+#basic tests
 test_handle_message()    
 test_handle_response()
+test_error()
+
+
+#important tests
 test_cveCPE()
+

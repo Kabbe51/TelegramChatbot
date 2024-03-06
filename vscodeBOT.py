@@ -67,19 +67,15 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dbcursor.execute("SELECT my_cves FROM cvecpe WHERE id = %s", (cpe_name,))
     result = dbcursor.fetchone()
     if result:
+        new_msg = result[0]
+        source_msg = "Retrieved from SQL database."
         await update.message.reply_text(f"Result {result}\n")
         return
-    r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10, delay=0.7, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
+    r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10, delay=50, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     new_msg = ""
     for eachCVE in r:
         catch = f'{eachCVE.id}\n'
         new_msg += catch
-
-    
-
-
-    #dbcursor.execute("INSERT INTO cvecpe (id, my_cves) VALUES (%s, %s)", (cpe_name, new_msg))
-    #connection.commit()
 
 
     await update.message.reply_text(f"CVE ID:\n{new_msg}\nCPE Name: {cpe_name}")
