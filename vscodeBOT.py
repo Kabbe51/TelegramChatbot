@@ -26,9 +26,6 @@ def handle_response(text: str) -> str:
     if "hello" in processed:
         return "Hi, write an existing command to get started."
 
-    if "how are you in?" in processed:
-        return "I am bot."
-
     if "how" in processed:
         return "Please write a command."
 
@@ -67,18 +64,33 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     dbcursor.execute("SELECT my_cves FROM cvecpe WHERE id = %s", (cpe_name,))
     result = dbcursor.fetchone()
     if result:
-        new_msg = result[0]
-        source_msg = "Retrieved from SQL database."
-        await update.message.reply_text(f"Result {result}\n")
+        new_msg = result[0].strip().split("\n")
+        new_format = "\n".join(new_msg)
+        db_msg = "Retrieved from SQL database."
+        await update.message.reply_text(f"CVE ID:\n{new_format}\nCPE Name: {cpe_name}\n{db_msg}")
         return
-    r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10, delay=50, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
+    r = nvdlib.searchCVE(cpeName=cpe_name, limit = 10, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     new_msg = ""
     for eachCVE in r:
-        catch = f'{eachCVE.id}\n'
+        catch = f'{eachCVE.id} {eachCVE.score}\n'
         new_msg += catch
 
+    dbcursor.execute("INSERT INTO cvecpe (id, my_cves) VALUES (%s, %s)", (cpe_name, new_msg))
+    connection.commit()
 
-    await update.message.reply_text(f"CVE ID:\n{new_msg}\nCPE Name: {cpe_name}")
+    await update.message.reply_text(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
+
+async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    dbcursor.execute("SELECT * FROM cvecpe")
+    result = dbcursor.fetchall()
+    if result:
+        responder = ""
+        for history in result:
+            responder += f"CPE Name: {history[0]}nCVEs\n{history[1]}\n"
+        await update.message.reply_text(responder)
+        return
+    await update.message.reply_text("No history recorded in database.")
+
 
 if __name__ == '__main__':
     #establish connection
@@ -106,6 +118,7 @@ if __name__ == '__main__':
     my_app.add_handler(CommandHandler('start', start_command))
     my_app.add_handler(CommandHandler('help', help_command))
     my_app.add_handler(CommandHandler('cvecpe', req_cve))
+    my_app.add_handler(CommandHandler('history', history))
     # msg handler
     my_app.add_handler(MessageHandler(filters.TEXT, handle_message))
 
