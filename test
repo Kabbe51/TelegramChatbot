@@ -26,6 +26,7 @@ async def SQL_db():
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Welcome to telegram bot.")
+    
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Hi, write an existing command to get started. For example /CVE, or /CPE")
 

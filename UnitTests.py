@@ -1,6 +1,6 @@
 from unittest.mock import patch, MagicMock
 from telegram import Update, Message, Chat
-from vscodeBOT import start_command, help_command, req, handle_response, handle_message, error, req_cve
+from telegrambot_CVE import start_command, help_command, req, handle_response, handle_message, error, req_cve
 new_update = Update(update_id=1, message=Message(message_id=1, text = "", chat=Chat(id=1, type="private")))
 
 @patch('Telegram.Update')
@@ -32,4 +32,3 @@ test_error()
 
 #important tests
 test_cveCPE()
-
