@@ -1,0 +1,16 @@
+#CPEs
+
+cpe:2.3:o:linux:linux_kernel:5.4.21:*:*:*:*:*:*:*
+cpe:2.3:o:centos:centos:6:*:*:*:*:*:*:*
+cpe:2.3:a:microsoft:office:2019:*:*:*:*:*:*:*
+cpe:2.3:a:microsoft:office:2019:*:*:*:*:-:x86:*
+cpe:2.3:a:microsoft:office:2019:*:*:*:*:macos:*:*
+
+
+
+
+#CVEs
+
+CVE-2024-2245
+CVE-2024-0818
+CVE-2024-1170
