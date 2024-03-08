@@ -135,28 +135,6 @@ async def my_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("Database is empty. ^v^")
 
-async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    '''Here you can choose to follow a cpe by using its specific cpe id'''
-    if len(context.args) < 1:
-        await update.message.reply_text("Try /follow_cpe 'insert cpe' to follow you designated CPE.")
-        return
-
-    cpe_name = "".join(context.args)
-    user = update.message.chat.id
-
-    dbcursor.execute("SELECT * FROM followed_cpe WHERE (cpe) = (%s)", (cpe_name,))
-    result = dbcursor.fetchall()
-
-    if result:
-        db_msg = "already followed"
-        await update.message.reply_text(f"CPE Name: {cpe_name}\n{db_msg}")
-        return
-
-    dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe) VALUES (%s, %s)", (user, cpe_name))
-    connection.commit()
-    
-    await update.message.reply_text(f"You now follow: {cpe_name}")
-
 async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''getcve is a function that returns a specific CVE with its ID, description and CVSS score.'''
     #await asyncio.sleep(10)
@@ -192,15 +170,43 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"CVE ID: {cveid}\nCVSS score: {message_cve}\n Retrieved from NIST database.")
 
-async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.from_user.id
 
-    dbcursor.execute("SELECT cpe FROM followed_cpe WHERE user_id = %s", (user,))
+async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    '''Here you can choose to follow a cpe by using its specific cpe id'''
+    if len(context.args) < 1:
+        await update.message.reply_text("Try /follow_cpe 'insert cpe' to follow you designated CPE.")
+        return
+
+    cpe_name = "".join(context.args)
+    user = update.message.chat.id
+
+    dbcursor.execute("SELECT * FROM followed_cpe WHERE cpe = %s", (cpe_name,))
     result = dbcursor.fetchall()
 
     if result:
+        db_msg = "already followed"
+        await update.message.reply_text(f"CPE Name: {cpe_name}\n{db_msg}")
+        return
+
+    dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe) VALUES (%s, %s)", (user, cpe_name))
+    connection.commit()
+    
+    await update.message.reply_text(f"You now follow: {cpe_name}")
+
+async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.chat.id
+    #cpe_name = "".join(context.args)await update.message.reply_text("try /subscriptions")
+    if len(context.args) < 1:
+        dbcursor.execute("SELECT cpe FROM followed_cpe WHERE user_id = %s", (user,))
+        result = dbcursor.fetchall()
+
+    if result and len(result) > 0:
         cpe_lst = "\n".join([row[0] for row in result])
         await update.message.reply_text(f"Your subscriptions to CPEs:\n{cpe_lst}")
+    
+    dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe) VALUES (%s, %s)", (user, cpe_name))
+    connection.commit()
+
     await update.message.reply_text("You are not subscribed to any CPEs.")
 
 if __name__ == '__main__':
