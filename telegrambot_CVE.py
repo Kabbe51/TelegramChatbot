@@ -140,19 +140,19 @@ async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 1:
         await update.message.reply_text("Try /follow_cpe 'insert cpe' to follow you designated CPE.")
         return
-    
 
     cpe_name = "".join(context.args)
     user = update.message.chat.id
-    dbcursor.execute("SELECT cpe_name FROM followed_cpe WHERE user_id = (%s)", (user,))
-    result = dbcursor.fetchone()
+
+    dbcursor.execute("SELECT * FROM followed_cpe WHERE (cpe) = (%s)", (cpe_name,))
+    result = dbcursor.fetchall()
 
     if result:
         db_msg = "already followed"
         await update.message.reply_text(f"CPE Name: {cpe_name}\n{db_msg}")
         return
 
-    dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe_name) VALUES (%s, %s)", (user, cpe_name))
+    dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe) VALUES (%s, %s)", (user, cpe_name))
     connection.commit()
     
     await update.message.reply_text(f"You now follow: {cpe_name}")
@@ -192,6 +192,16 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"CVE ID: {cveid}\nCVSS score: {message_cve}\n Retrieved from NIST database.")
 
+async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.message.from_user.id
+
+    dbcursor.execute("SELECT cpe FROM followed_cpe WHERE user_id = %s", (user,))
+    result = dbcursor.fetchall()
+
+    if result:
+        cpe_lst = "\n".join([row[0] for row in result])
+        await update.message.reply_text(f"Your subscriptions to CPEs:\n{cpe_lst}")
+    await update.message.reply_text("You are not subscribed to any CPEs.")
 
 if __name__ == '__main__':
     #establish connection
@@ -206,9 +216,9 @@ if __name__ == '__main__':
 
     dbcursor.execute('''
     CREATE TABLE IF NOT EXISTS followed_cpe (
-        user_id VARCHAR(255) NOT NULL,
-        cpe_name TEXT NOT NULL,
-        PRIMARY KEY (user_id)               
+        user_id INT NOT NULL,
+        cpe VARCHAR(255) NOT NULL,
+        PRIMARY KEY (cpe)               
         )''')
 
     dbcursor.execute('''
@@ -238,6 +248,7 @@ if __name__ == '__main__':
     my_app.add_handler(CommandHandler('pdf', my_pdf))
     my_app.add_handler(CommandHandler('follow_cpe', follow_cpe))
     my_app.add_handler(CommandHandler('getcve', getcve))
+    my_app.add_handler(CommandHandler('subscriptions', subscriptions))
 
     my_app.add_handler(MessageHandler(filters.TEXT, handle_message))
     my_app.add_error_handler(error)
