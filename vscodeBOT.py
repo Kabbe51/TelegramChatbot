@@ -72,9 +72,6 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         catch = f'{eachCVE.id}\n'
         new_msg += catch
 
-        dbcursor.execute("INSERT INTO cvecpe (cve_id, CPE_name) VALUES (%s, %s)", (eachCVE.id, cpe_name))
-        connection.commit()
-
     await update.message.reply_text(f"CVE ID:\n{new_msg}\nCPE Name: {cpe_name}")
 
 if __name__ == '__main__':
@@ -90,9 +87,9 @@ if __name__ == '__main__':
 
     dbcursor.execute('''
     CREATE TABLE IF NOT EXISTS cvecpe (
-        id INTEGER PRIMARY KEY BOT NULL,
+        id INTEGER PRIMARY KEY AUTO_INCREMENT,
         cve_id VARCHAR(255) NOT NULL,
-        CPE_name VARCHAR(255) NOT NULL
+        cpe_name VARCHAR(255) NOT NULL
         )''')
     
 
@@ -110,3 +107,13 @@ if __name__ == '__main__':
 
     print("Polling...")
     my_app.run_polling(poll_interval=3)
+
+
+
+"""dbcursor.execute("SELECT id FROM cvecpe WHERE cve_id = %s AND CPE_name = %s", (eachCVE.id, cpe_name))
+        existing_entry = dbcursor.fetchone()
+
+        if not existing_entry:
+            # If CVE doesn't exist, insert it into the database
+            dbcursor.execute("INSERT INTO cvecpe (cve_id, CPE_name) VALUES (%s, %s)", (eachCVE.id, cpe_name))
+            connection.commit()""" #Test code
