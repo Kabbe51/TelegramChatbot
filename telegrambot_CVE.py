@@ -61,25 +61,27 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     #await asyncio.sleep(10)
-    if len(context.args) < 1:
+    if len(context.args) < 2:
         await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
         return
 
-    cpe_name = "".join(context.args)
+    cpe_name = context.args[0]
+    pubStart = context.args[1]
+
     dbcursor.execute("SELECT my_cves FROM cvecpe WHERE id = %s", (cpe_name,))
     result = dbcursor.fetchone()
     
     if result:
         new_msg = result[0].strip().split("\n")
-        new_format = "\n".join(new_msg)
-        db_msg = "Retrieved from SQL database."
-        await update.message.reply_text(f"CVE ID:\n{new_format}\nCPE Name: {cpe_name}\n{db_msg}")
+        my_format = "\n".join(new_msg[::-1])
+        db_msg = "Retrieved from my SQL database."
+        await update.message.reply_text(f"CVE ID:\n{my_format}\nCPE Name: {cpe_name}\n{db_msg}")
         return
-
-    r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
+    r = nvdlib.searchCVE(cpeName=cpe_name, pubStartDate=pubStart, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     new_msg = ""
-    
-    for eachCVE in r:
+
+    reverse = r[::-1]
+    for eachCVE in reverse:
         catch = f'{eachCVE.id} {eachCVE.score}\n'
         new_msg += catch
 
@@ -97,7 +99,7 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if result:
         responder = ""
         for hist in result:
-            responder += f"CPE Name: {hist[0]}nCVEs\n{hist[1]}\n"
+            responder += f"CPE Name: {hist[0]}\nCVEs\n{hist[1]}\n"
 
         await update.message.reply_text(responder)
         return
