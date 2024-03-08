@@ -205,6 +205,7 @@ if __name__ == '__main__':
         PRIMARY KEY (score)
     )''')
 
+
     print("Bot is starting...")
     my_app = Application.builder().token(TOKEN).build()
 
