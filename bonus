@@ -1,0 +1,35 @@
+"""def my_asyncs():
+    lim = 250_000
+    print(f"Asyncio loop {lim * 2:,}")
+    myTime = datetime.datetime.now
+
+    loop = asyncio.new_event_loop
+
+    data = asyncio.Queue()
+    
+    loop1 = loop.create_task(start_command(lim, data))
+    loop2 = loop.create_task(help_command(lim, data))
+    loop3 = loop.create_task(req_cve(lim, data))
+    loop4 = loop.create_task(history(lim, data))
+    loop5 = loop.create_task(my_pdf(lim, data))
+    loop6 = loop.create_task(getcve(lim, data))
+
+    last_task = asyncio.gather(loop1, loop2, loop3, loop4, loop5, loop6)
+    loop.run_until_complete(last_task)
+
+    timer = datetime.datetime.now() - myTime
+    print(f"Shutting down... (total time: {timer.total_seconds():,.2f} sec.)", flush=True)"""
+
+
+#async try 
+"""    retries = 5
+    for attempt in range(retries):
+        try:
+        except ReadTimeout:
+            if attempt < retries - 1:
+                await asyncio.sleep(1)
+                continue"""
+
+
+
+            

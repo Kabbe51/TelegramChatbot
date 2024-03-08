@@ -1,4 +1,5 @@
 '''Telegram CVE Chatbot'''
+from requests import ReadTimeout
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from telegram import Update
 import nvdlib
@@ -6,10 +7,11 @@ from typing import Final
 import mysql.connector
 from fpdf import FPDF
 import asyncio
-
+from functools import partial
 TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
 BOT_USERNAME: Final = "@botKabbeTbot"
 key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
+
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''basic start command'''
@@ -61,12 +63,12 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     #await asyncio.sleep(10)
-    if len(context.args) < 2:
+    if len(context.args) < 1:
         await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
         return
 
     cpe_name = context.args[0]
-    pubStart = context.args[1]
+    #pubStart = context.args[1]
 
     dbcursor.execute("SELECT my_cves FROM cvecpe WHERE id = %s", (cpe_name,))
     result = dbcursor.fetchone()
@@ -77,7 +79,7 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db_msg = "Retrieved from my SQL database."
         await update.message.reply_text(f"CVE ID:\n{my_format}\nCPE Name: {cpe_name}\n{db_msg}")
         return
-    r = nvdlib.searchCVE(cpeName=cpe_name, pubStartDate=pubStart, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
+    r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     new_msg = ""
 
     reverse = r[::-1]
@@ -135,18 +137,25 @@ async def my_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''Here you can choose to follow a cpe by using its specific cpe id'''
-    #await asyncio.sleep(10)
     if len(context.args) < 1:
-        await update.message.reply_text("Try /follow 'insert cpe' to follow you designated CPE.")
+        await update.message.reply_text("Try /follow_cpe 'insert cpe' to follow you designated CPE.")
         return
     
+
     cpe_name = "".join(context.args)
     user = update.message.chat.id
-    
+    dbcursor.execute("SELECT cpe_name FROM followed_cpe WHERE user_id = (%s)", (user,))
+    result = dbcursor.fetchone()
+
+    if result:
+        db_msg = "already followed"
+        await update.message.reply_text(f"CPE Name: {cpe_name}\n{db_msg}")
+        return
+
     dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe_name) VALUES (%s, %s)", (user, cpe_name))
     connection.commit()
     
-    await update.message.reply_text("You are now followed to {cpe_name}")
+    await update.message.reply_text(f"You now follow: {cpe_name}")
 
 async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''getcve is a function that returns a specific CVE with its ID, description and CVSS score.'''
@@ -168,7 +177,11 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"CVSS Score: {formatting}\nCVE ID: {cveid}\nDescription: {desc}\n{db_msg}")
         return
     
-    mycve = nvdlib.cve.searchCVE(cveId=cveid, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
+
+    loop = asyncio.get_event_loop()
+    myPartial = partial(nvdlib.searchCVE, cveId=cveid, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f", delay=0.6)
+    mycve = (await loop.run_in_executor(None, myPartial))
+    #mycve = nvdlib.cve.searchCVE(cveId=cveid, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     message_cve = ""
     for newCVE in mycve:
         catch = f'{newCVE.id} {newCVE.score[1]} {newCVE.score[2]}\n\nDescription: {newCVE.descriptions[0].value}\n'
@@ -178,6 +191,7 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     connection.commit()
 
     await update.message.reply_text(f"CVE ID: {cveid}\nCVSS score: {message_cve}\n Retrieved from NIST database.")
+
 
 if __name__ == '__main__':
     #establish connection
@@ -189,6 +203,13 @@ if __name__ == '__main__':
     )
 
     dbcursor = connection.cursor()
+
+    dbcursor.execute('''
+    CREATE TABLE IF NOT EXISTS followed_cpe (
+        user_id VARCHAR(255) NOT NULL,
+        cpe_name TEXT NOT NULL,
+        PRIMARY KEY (user_id)               
+        )''')
 
     dbcursor.execute('''
     CREATE TABLE IF NOT EXISTS cvecpe (
@@ -207,7 +228,7 @@ if __name__ == '__main__':
 
 
     print("Bot is starting...")
-    my_app = Application.builder().token(TOKEN).build()
+    my_app = Application.builder().token(TOKEN).concurrent_updates(True).build()
 
     my_app.add_handler(CommandHandler('start', start_command))
     my_app.add_handler(CommandHandler('help', help_command))
