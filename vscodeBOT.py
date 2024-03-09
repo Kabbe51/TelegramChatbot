@@ -1,5 +1,3 @@
-import datetime
-import requests
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from telegram import Update
 import nvdlib

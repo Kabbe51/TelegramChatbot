@@ -95,7 +95,7 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''returns history of database'''
     #await asyncio.sleep(10)
-    dbcursor.execute("SELECT * FROM cvecpe, tableID")
+    dbcursor.execute("SELECT * FROM cvecpe, tableID, followed_cpe")
     result = dbcursor.fetchall()
     
     if result:
@@ -174,7 +174,7 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''Here you can choose to follow a cpe by using its specific cpe id'''
     if len(context.args) < 1:
-        await update.message.reply_text("Try /follow_cpe 'insert cpe' to follow you designated CPE.")
+        await update.message.reply_text("Try /follow 'insert cpe' to follow you designated CPE.")
         return
 
     cpe_name = "".join(context.args)
@@ -187,35 +187,35 @@ async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
         db_msg = "already followed"
         await update.message.reply_text(f"CPE Name: {cpe_name}\n{db_msg}")
         return
-
-    dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe) VALUES (%s, %s)", (user, cpe_name))
-    connection.commit()
     
+    dbcursor.execute("INSERT INTO followed_cpe (cpe, user_id) VALUES (%s, %s)", (cpe_name, user))
+    connection.commit()
+
     await update.message.reply_text(f"You now follow: {cpe_name}")
 
 async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.message.chat.id
-    #cpe_name = "".join(context.args)await update.message.reply_text("try /subscriptions")
-    if len(context.args) < 1:
-        dbcursor.execute("SELECT cpe FROM followed_cpe WHERE user_id = %s", (user,))
-        result = dbcursor.fetchall()
+    dbcursor.execute("SELECT cpe FROM followed_cpe")
+    result = dbcursor.fetchall()
 
-    if result and len(result) > 0:
-        cpe_lst = "\n".join([row[0] for row in result])
-        await update.message.reply_text(f"Your subscriptions to CPEs:\n{cpe_lst}")
+    if result:
+        responder = ""
+        for hist in result:
+            responder += f"CPE Name: {hist[0]}\n"
+        
+        await update.message.reply_text(responder)
+        return
+
+    await update.message.reply_text("You don't follow any cpes.")
     
-    dbcursor.execute("INSERT INTO followed_cpe (user_id, cpe) VALUES (%s, %s)", (user, cpe_name))
-    connection.commit()
-
-    await update.message.reply_text("You are not subscribed to any CPEs.")
 
 if __name__ == '__main__':
     #establish connection
     connection = mysql.connector.connect(
         host = "sql11.freemysqlhosting.net",
-        user = "sql11688743",
-        password = "VtiuLP6LQA",
-        database = "sql11688743"
+        user = "sql11689999",
+        password = "tUl2Y8cb5E",
+        database = "sql11689999"
     )
 
     dbcursor = connection.cursor()
@@ -223,8 +223,7 @@ if __name__ == '__main__':
     dbcursor.execute('''
     CREATE TABLE IF NOT EXISTS followed_cpe (
         user_id INT NOT NULL,
-        cpe VARCHAR(255) NOT NULL,
-        PRIMARY KEY (cpe)               
+        cpe VARCHAR(255) NOT NULL             
         )''')
 
     dbcursor.execute('''
@@ -252,9 +251,9 @@ if __name__ == '__main__':
     my_app.add_handler(CommandHandler('cvecpe', req_cve))
     my_app.add_handler(CommandHandler('history', history))
     my_app.add_handler(CommandHandler('pdf', my_pdf))
-    my_app.add_handler(CommandHandler('follow_cpe', follow_cpe))
+    my_app.add_handler(CommandHandler('follow', follow_cpe))
     my_app.add_handler(CommandHandler('getcve', getcve))
-    my_app.add_handler(CommandHandler('subscriptions', subscriptions))
+    my_app.add_handler(CommandHandler('subs', subscriptions))
 
     my_app.add_handler(MessageHandler(filters.TEXT, handle_message))
     my_app.add_error_handler(error)
