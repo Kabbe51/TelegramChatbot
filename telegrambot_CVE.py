@@ -9,7 +9,8 @@ from fpdf import FPDF
 import asyncio
 from functools import partial
 import matplotlib.pyplot as plt
-
+import csv 
+import numpy 
 
 TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
 BOT_USERNAME: Final = "@botKabbeTbot"
@@ -173,7 +174,6 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(f"CVE ID: {cveid}\nCVSS score: {message_cve}\n Retrieved from NIST database.")
 
-
 async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''Here you can choose to follow a cpe by using its specific cpe id'''
     if len(context.args) < 1:
@@ -211,20 +211,26 @@ async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("You don't follow any cpes.")
     
 async def graph(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    try:
-        cves = nvdlib.searchCVE(cpeName=key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f", delay=0.6)
-        cveinfo = []
+    cpe_name = context.args[0]
+    r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f", limit=20)
+    cve_id = []
+    cvss_score = []
+    reverse = r[::-1]
+    for eachCVE in reverse:
+        cve_id.append(eachCVE.id)
+        cvss_score.append(eachCVE.score[1])
 
-        for cve in cves:
-            cve_id = cve.id
-            cvss_score = cve.score
-            cveinfo.append({'id': cve_id, 'score': cvss_score})
-                            
-        return cveinfo
-    
-    except Exception as e:
-        await update.message.reply_text(f"Error getting data: {e}")
-        return []
+
+    plt.plot(cve_id, cvss_score, color = 'g', linestyle = 'dashed', marker = 'o', label = 'CVE Data') 
+
+    plt.xticks(rotation = 20, fontsize = 8) 
+    plt.xlabel('CVE IDs') 
+    plt.ylabel('CVSS Score') 
+    plt.title('CVE Report', fontsize = 20)
+    plt.grid() 
+    plt.legend() 
+    plt.show() 
+
 
 if __name__ == '__main__':
     #establish connection
