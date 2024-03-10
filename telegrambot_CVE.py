@@ -8,6 +8,9 @@ import mysql.connector
 from fpdf import FPDF
 import asyncio
 from functools import partial
+import matplotlib.pyplot as plt
+
+
 TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
 BOT_USERNAME: Final = "@botKabbeTbot"
 key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
@@ -194,7 +197,6 @@ async def follow_cpe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(f"You now follow: {cpe_name}")
 
 async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.message.chat.id
     dbcursor.execute("SELECT cpe FROM followed_cpe")
     result = dbcursor.fetchall()
 
@@ -208,6 +210,21 @@ async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text("You don't follow any cpes.")
     
+async def graph(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    try:
+        cves = nvdlib.searchCVE(cpeName=key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f", delay=0.6)
+        cveinfo = []
+
+        for cve in cves:
+            cve_id = cve.id
+            cvss_score = cve.score
+            cveinfo.append({'id': cve_id, 'score': cvss_score})
+                            
+        return cveinfo
+    
+    except Exception as e:
+        await update.message.reply_text(f"Error getting data: {e}")
+        return []
 
 if __name__ == '__main__':
     #establish connection
@@ -254,6 +271,7 @@ if __name__ == '__main__':
     my_app.add_handler(CommandHandler('follow', follow_cpe))
     my_app.add_handler(CommandHandler('getcve', getcve))
     my_app.add_handler(CommandHandler('subs', subscriptions))
+    my_app.add_handler(CommandHandler('cvss', graph))
 
     my_app.add_handler(MessageHandler(filters.TEXT, handle_message))
     my_app.add_error_handler(error)
