@@ -1,5 +1,4 @@
 '''Telegram CVE Chatbot'''
-from requests import ReadTimeout
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from telegram import Update
 import nvdlib
@@ -9,8 +8,6 @@ from fpdf import FPDF
 import asyncio
 from functools import partial
 import matplotlib.pyplot as plt
-import csv 
-import numpy 
 
 TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
 BOT_USERNAME: Final = "@botKabbeTbot"
@@ -19,22 +16,18 @@ key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''basic start command'''
-    await asyncio.sleep(10)
     await update.message.reply_text("Welcome to telegram bot.")
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''basic help command'''
-    #await asyncio.sleep(10)
     await update.message.reply_text("Hi, write an existing command to get started. For example /CVE, or /CPE")
 
 async def req(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''response function'''
-    #await asyncio.sleep(10)
     await update.message.reply_text("response")
 
 async def handle_response(text: str) -> str:
     '''handling all responses'''
-    #await asyncio.sleep(10)
     processed: str = text.lower()
     if "hello" in processed:
         return "Hi, write an existing command to get started."
@@ -43,7 +36,6 @@ async def handle_response(text: str) -> str:
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''Handles all messages.'''
-    #await asyncio.sleep(10)
     message_type: str = update.message.chat.type
     text: str = update.message.text
 
@@ -66,13 +58,13 @@ async def error(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(f'Update {update} caused an error {context.error}')
 
 async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    #await asyncio.sleep(10)
+    #dbcursor = connection.cursor()
+
     if len(context.args) < 1:
         await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
         return
 
     cpe_name = context.args[0]
-    #pubStart = context.args[1]
 
     dbcursor.execute("SELECT my_cves FROM cvecpe WHERE id = %s", (cpe_name,))
     result = dbcursor.fetchone()
@@ -98,7 +90,6 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''returns history of database'''
-    #await asyncio.sleep(10)
     dbcursor.execute("SELECT * FROM cvecpe, tableID, followed_cpe")
     result = dbcursor.fetchall()
     
@@ -114,7 +105,6 @@ async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def my_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''returns a pdf with database history'''
-    #await asyncio.sleep(10)
     dbcursor.execute("SELECT * FROM cvecpe, tableID")
     result = dbcursor.fetchall()
 
@@ -141,7 +131,6 @@ async def my_pdf(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''getcve is a function that returns a specific CVE with its ID, description and CVSS score.'''
-    #await asyncio.sleep(10)
     if len(context.args) < 1:
         await update.message.reply_text("Please insert CVE id")
         return
@@ -163,7 +152,6 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     loop = asyncio.get_event_loop()
     myPartial = partial(nvdlib.searchCVE, cveId=cveid, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f", delay=0.6)
     mycve = (await loop.run_in_executor(None, myPartial))
-    #mycve = nvdlib.cve.searchCVE(cveId=cveid, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     message_cve = ""
     for newCVE in mycve:
         catch = f'{newCVE.id} {newCVE.score[1]} {newCVE.score[2]}\n\nDescription: {newCVE.descriptions[0].value}\n'
