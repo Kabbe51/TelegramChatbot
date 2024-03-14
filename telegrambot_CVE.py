@@ -61,7 +61,10 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     #dbcursor = connection.cursor()
 
     if len(context.args) < 1:
-        await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
+        try:
+            await update.message.reply_text("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
+        except:
+            print(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
         return
 
     cpe_name = context.args[0]
@@ -73,7 +76,10 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         new_msg = result[0].strip().split("\n")
         my_format = "\n".join(new_msg[::-1])
         db_msg = "Retrieved from my SQL database."
-        await update.message.reply_text(f"CVE ID:\n{my_format}\nCPE Name: {cpe_name}\n{db_msg}")
+        try:
+            await update.message.reply_text(f"CVE ID:\n{my_format}\nCPE Name: {cpe_name}\n{db_msg}")
+        except:
+            print(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
         return
     r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
     new_msg = ""
@@ -85,8 +91,10 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     dbcursor.execute("INSERT INTO cvecpe (id, my_cves) VALUES (%s, %s)", (cpe_name, new_msg))
     connection.commit()
-    
-    await update.message.reply_text(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
+    try: 
+        await update.message.reply_text(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
+    except:
+        print(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
 
 async def history(update: Update, context: ContextTypes.DEFAULT_TYPE):
     '''returns history of database'''

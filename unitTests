@@ -1,0 +1,32 @@
+import asynctest
+from unittest.mock import AsyncMock, patch
+from telegrambot_CVE import getcve, req_cve
+
+#Used AsyncMock to test a async function with mock that 
+#replicates the first argument of the function
+class testGetCVE(asynctest.TestCase):
+    @patch('telegrambot_CVE.Update')
+    @patch('telegrambot_CVE.ContextTypes.DEFAULT_TYPE')
+    async def test_getcve(self, mock_update, mock_context):
+        
+        mock_update.message.reply_text = AsyncMock()
+        mock_context.args = []
+
+        await getcve(mock_update, mock_context)
+
+        mock_update.message.reply_text.assert_called_once_with("Please insert CVE id")
+
+
+    @patch('telegrambot_CVE.Update')
+    @patch('telegrambot_CVE.ContextTypes.DEFAULT_TYPE')
+    async def test_CPE(self, mock_update, mock_context):
+
+        mock_update.message.reply_text = AsyncMock()
+        mock_context.args = []
+
+        await req_cve(mock_update, mock_context)
+
+        mock_update.message.reply_text.assert_called_once_with("Try writing /cvecpe and name of the cpe you want to check, and you will get the cves.")
+
+if __name__ == '__main__':
+    asynctest.main()
