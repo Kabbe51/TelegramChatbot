@@ -9,9 +9,9 @@ import asyncio
 from functools import partial
 import matplotlib.pyplot as plt
 
-TOKEN: Final = '6385349407:AAEt4JmsYYkMkjSxkCoTqRw7QGfwRB6BM-4'
+TOKEN: Final = 'Example'
 BOT_USERNAME: Final = "@botKabbeTbot"
-key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f"
+key = "Example"
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
