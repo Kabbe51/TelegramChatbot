@@ -81,7 +81,7 @@ async def req_cve(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except:
             print(f"CVE ID and CVSS:\n{new_msg}\nCPE Name: {cpe_name}\n retrieved from NIST database.")
         return
-    r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f")
+    r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "example")
     new_msg = ""
 
     reverse = r[::-1]
@@ -158,7 +158,7 @@ async def getcve(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 
     loop = asyncio.get_event_loop()
-    myPartial = partial(nvdlib.searchCVE, cveId=cveid, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f", delay=0.6)
+    myPartial = partial(nvdlib.searchCVE, cveId=cveid, key = "example", delay=0.6)
     mycve = (await loop.run_in_executor(None, myPartial))
     message_cve = ""
     for newCVE in mycve:
@@ -208,7 +208,7 @@ async def subscriptions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 async def graph(update: Update, context: ContextTypes.DEFAULT_TYPE):
     cpe_name = context.args[0]
-    r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "fc1b647f-e97e-477d-bdd5-9df07514ca1f", limit=20)
+    r = nvdlib.searchCVE(cpeName=cpe_name, delay=0.6, key = "example", limit=20)
     cve_id = []
     cvss_score = []
     reverse = r[::-1]
